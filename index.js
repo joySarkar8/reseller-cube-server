@@ -25,15 +25,15 @@ async function dbConnect() {
 }
 dbConnect();
 
-const Categories = client.db("resellerCube").collection("categories");
+const CategoriesCollection = client.db("resellerCube").collection("categories");
+const UsersCollection = client.db("resellerCube").collection("users");
 
 
 // categories get api
 app.get("/categoires", async (req, res) => {
     try {
         const query = {};
-        const cursor = Categories.find(query);
-
+        const cursor = CategoriesCollection.find(query);
 
         const categoires = await cursor.toArray();
         res.send({
@@ -51,6 +51,31 @@ app.get("/categoires", async (req, res) => {
     }
 });
 
+app.post('/users', async (req, res) => {
+    try {
+        const user = req.body;
+        const email = req.body.email;
+        const query = { email };
+        const getEmail = await UsersCollection.findOne(query);
+        
+        if (getEmail?.email === email) {
+            return res.send({ message: 'User allready save in database' });
+        } else {
+            const result = await UsersCollection.insertOne(user);
+            res.send({
+                success: true,
+                message: "Successfully inserted data",
+                data: result,
+            });
+        }
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
 
 app.get('/', async (req, res) => {
     res.send('reseller cube server is successfully running');
