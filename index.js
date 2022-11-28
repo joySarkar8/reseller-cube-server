@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 require('dotenv').config();
 
@@ -27,6 +27,7 @@ dbConnect();
 
 const CategoriesCollection = client.db("resellerCube").collection("categories");
 const UsersCollection = client.db("resellerCube").collection("users");
+const ProductsCollection = client.db("resellerCube").collection("products");
 
 
 // categories get api
@@ -51,6 +52,7 @@ app.get("/categoires", async (req, res) => {
     }
 });
 
+// user post api
 app.post('/users', async (req, res) => {
     try {
         const user = req.body;
@@ -70,6 +72,29 @@ app.post('/users', async (req, res) => {
         }
 
     } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+// products get api
+app.get("/products/:id", async (req, res) => {
+    try {
+        const id = req.params.id;
+        const query = {category_id : id}
+        const cursor = ProductsCollection.find(query);
+
+        const products = await cursor.toArray();
+        res.send({
+            success: true,
+            message: "Successfully load",
+            data: products,
+        });
+
+    } catch (error) {
+        // console.log(error.name, error.message);
         res.send({
             success: false,
             error: error.message,
