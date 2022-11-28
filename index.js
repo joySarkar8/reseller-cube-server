@@ -28,6 +28,7 @@ dbConnect();
 const CategoriesCollection = client.db("resellerCube").collection("categories");
 const UsersCollection = client.db("resellerCube").collection("users");
 const ProductsCollection = client.db("resellerCube").collection("products");
+const BookedCollection = client.db("resellerCube").collection("booked");
 
 
 // categories get api
@@ -59,7 +60,7 @@ app.post('/users', async (req, res) => {
         const email = req.body.email;
         const query = { email };
         const getEmail = await UsersCollection.findOne(query);
-        
+
         if (getEmail?.email === email) {
             return res.send({ message: 'User allready save in database' });
         } else {
@@ -83,7 +84,7 @@ app.post('/users', async (req, res) => {
 app.get("/products/:id", async (req, res) => {
     try {
         const id = req.params.id;
-        const query = {category_id : id}
+        const query = { category_id: id }
         const cursor = ProductsCollection.find(query);
 
         const products = await cursor.toArray();
@@ -95,6 +96,47 @@ app.get("/products/:id", async (req, res) => {
 
     } catch (error) {
         // console.log(error.name, error.message);
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+app.get('/myorders', async (req, res)=> {
+    try {
+        const email = req.query.email;
+        const query = {email: email}
+        const cursor = BookedCollection.find(query);
+
+        const myOrders = await cursor.toArray();
+        res.send({
+            success: true,
+            message: "Successfully load",
+            data: myOrders,
+        });
+
+    } catch (error) {
+        // console.log(error.name, error.message);
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+})
+
+app.post('/booked', async (req, res) => {
+    try {
+        const user = req.body;
+
+        const result = await BookedCollection.insertOne(user);
+        res.send({
+            success: true,
+            message: "Successfully inserted data",
+        });
+
+
+    } catch (error) {
         res.send({
             success: false,
             error: error.message,
