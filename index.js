@@ -29,6 +29,7 @@ const CategoriesCollection = client.db("resellerCube").collection("categories");
 const UsersCollection = client.db("resellerCube").collection("users");
 const ProductsCollection = client.db("resellerCube").collection("products");
 const BookedCollection = client.db("resellerCube").collection("booked");
+const AdvertisementCollection = client.db("resellerCube").collection("advertisement");
 
 
 // categories get api
@@ -81,10 +82,10 @@ app.post('/users', async (req, res) => {
 });
 
 // products get api
-app.get("/products/:id", async (req, res) => {
+app.get("/products/:categoryName", async (req, res) => {
     try {
-        const id = req.params.id;
-        const query = { category_id: id }
+        const category = req.params.categoryName;
+        const query = { category }
         const cursor = ProductsCollection.find(query);
 
         const products = await cursor.toArray();
@@ -103,10 +104,50 @@ app.get("/products/:id", async (req, res) => {
     }
 });
 
-app.get('/myorders', async (req, res)=> {
+app.get('/myproduct', async (req, res) => {
     try {
         const email = req.query.email;
-        const query = {email: email}
+        const query = {email};
+        const cursor = ProductsCollection.find(query);
+        const result = await cursor.toArray();
+        res.send({
+            success: true,
+            message: "Successfully inserted data",
+            data: result,
+        });
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+app.post('/add-product', async (req, res) => {
+    try {
+        const product = req.body;
+
+        const result = await ProductsCollection.insertOne(product);
+        res.send({
+            success: true,
+            message: "Successfully inserted data",
+        });
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+app.get('/myorders', async (req, res) => {
+    try {
+        const email = req.query.email;
+        const query = { email: email }
         const cursor = BookedCollection.find(query);
 
         const myOrders = await cursor.toArray();
@@ -130,6 +171,27 @@ app.post('/booked', async (req, res) => {
         const user = req.body;
 
         const result = await BookedCollection.insertOne(user);
+        res.send({
+            success: true,
+            message: "Successfully inserted data",
+        });
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+app.put('/advertise/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const cursor = { _id: ObjectId(id) };
+        const options = { upsert: true };
+        const updatedDoc = { $set: req.body}
+
+        const result = await ProductsCollection.updateOne(cursor, updatedDoc, options);
         res.send({
             success: true,
             message: "Successfully inserted data",
