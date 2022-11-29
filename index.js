@@ -29,7 +29,7 @@ const CategoriesCollection = client.db("resellerCube").collection("categories");
 const UsersCollection = client.db("resellerCube").collection("users");
 const ProductsCollection = client.db("resellerCube").collection("products");
 const BookedCollection = client.db("resellerCube").collection("booked");
-const AdvertisementCollection = client.db("resellerCube").collection("advertisement");
+// const AdvertisementCollection = client.db("resellerCube").collection("advertisement");
 
 
 // categories get api
@@ -57,7 +57,7 @@ app.get("/categoires", async (req, res) => {
 app.get("/advertise", async (req, res) => {
     try {
         const advertise = req.query.advertise;
-        const query = {advertise};
+        const query = { advertise };
 
         // const query = {
         //     advertise
@@ -66,12 +66,13 @@ app.get("/advertise", async (req, res) => {
         const cursor = ProductsCollection.find(query);
 
         const products = await cursor.toArray();
+        const updatedProducts = products.filter(product => !product.status)
 
         // console.log(products);
         res.send({
             success: true,
             message: "Successfully load",
-            data: products,
+            data: updatedProducts,
         });
 
     } catch (error) {
@@ -110,18 +111,81 @@ app.post('/users', async (req, res) => {
     }
 });
 
-// products get api
-app.get("/products/:categoryName", async (req, res) => {
+
+// seller private route
+app.get('/users/seller/:email', async (req, res) => {
     try {
-        const category = req.params.categoryName;
-        const query = { category }
+        const email = req.params.email;
+        const query = { email };
+
+        const getEmail = await UsersCollection.findOne(query);
+
+        if (getEmail.role === 'seller') {
+            res.send({
+                success: true,
+                message: "Unathorozed User",
+            });
+        }
+        else{
+            res.send({
+                success: false,
+                message: "Authorozed User",
+            });
+        }
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+
+
+// products get api-----------------------------
+// app.get("/products/:categoryName", async (req, res) => {
+//     try {
+//         const category = req.params.categoryName;
+//         const query = { category };
+
+//         console.log(query);
+//         const cursor = ProductsCollection.find(query);
+
+//         const products = await cursor.toArray();
+//         const updatedProducts = products.filter(product => !product.status)
+
+//         res.send({
+//             success: true,
+//             message: "Successfully load",
+//             data: updatedProducts,
+//         });
+
+//     } catch (error) {
+//         // console.log(error.name, error.message);
+//         res.send({
+//             success: false,
+//             error: error.message,
+//         });
+//     }
+// });
+
+app.get("/products", async (req, res) => {
+    try {
+        const category = req.query.category;
+        const query = { category };
+
+        
         const cursor = ProductsCollection.find(query);
 
         const products = await cursor.toArray();
+        const updatedProducts = products.filter(product => !product.status)
+
         res.send({
             success: true,
             message: "Successfully load",
-            data: products,
+            data: updatedProducts,
         });
 
     } catch (error) {
@@ -133,10 +197,12 @@ app.get("/products/:categoryName", async (req, res) => {
     }
 });
 
+//-------------------------------------------------
+
 app.get('/myproduct', async (req, res) => {
     try {
         const email = req.query.email;
-        const query = {email};
+        const query = { email };
         const cursor = ProductsCollection.find(query);
         const result = await cursor.toArray();
         res.send({
@@ -218,7 +284,7 @@ app.put('/advertise/:id', async (req, res) => {
         const id = req.params.id;
         const cursor = { _id: ObjectId(id) };
         const options = { upsert: true };
-        const updatedDoc = { $set: req.body}
+        const updatedDoc = { $set: req.body }
 
         const result = await ProductsCollection.updateOne(cursor, updatedDoc, options);
         res.send({
