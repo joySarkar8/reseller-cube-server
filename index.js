@@ -54,6 +54,35 @@ app.get("/categoires", async (req, res) => {
     }
 });
 
+app.get("/advertise", async (req, res) => {
+    try {
+        const advertise = req.query.advertise;
+        const query = {advertise};
+
+        // const query = {
+        //     advertise
+        // }
+
+        const cursor = ProductsCollection.find(query);
+
+        const products = await cursor.toArray();
+
+        // console.log(products);
+        res.send({
+            success: true,
+            message: "Successfully load",
+            data: products,
+        });
+
+    } catch (error) {
+        // console.log(error.name, error.message);
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
 // user post api
 app.post('/users', async (req, res) => {
     try {
