@@ -143,6 +143,37 @@ app.get('/users/seller/:email', async (req, res) => {
 });
 
 
+// admin private route
+app.get('/users/admin/:email', async (req, res) => {
+    try {
+        const email = req.params.email;
+        const query = { email };
+
+        const getEmail = await UsersCollection.findOne(query);
+
+        if (getEmail.role === 'admin') {
+            res.send({
+                success: true,
+                message: "Unathorozed User",
+            });
+        }
+        else{
+            res.send({
+                success: false,
+                message: "Authorozed User",
+            });
+        }
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+
 
 // products get api-----------------------------
 // app.get("/products/:categoryName", async (req, res) => {
