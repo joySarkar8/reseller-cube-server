@@ -29,7 +29,6 @@ const CategoriesCollection = client.db("resellerCube").collection("categories");
 const UsersCollection = client.db("resellerCube").collection("users");
 const ProductsCollection = client.db("resellerCube").collection("products");
 const BookedCollection = client.db("resellerCube").collection("booked");
-// const AdvertisementCollection = client.db("resellerCube").collection("advertisement");
 
 
 // categories get api
@@ -173,35 +172,6 @@ app.get('/users/admin/:email', async (req, res) => {
     }
 });
 
-
-
-// products get api-----------------------------
-// app.get("/products/:categoryName", async (req, res) => {
-//     try {
-//         const category = req.params.categoryName;
-//         const query = { category };
-
-//         console.log(query);
-//         const cursor = ProductsCollection.find(query);
-
-//         const products = await cursor.toArray();
-//         const updatedProducts = products.filter(product => !product.status)
-
-//         res.send({
-//             success: true,
-//             message: "Successfully load",
-//             data: updatedProducts,
-//         });
-
-//     } catch (error) {
-//         // console.log(error.name, error.message);
-//         res.send({
-//             success: false,
-//             error: error.message,
-//         });
-//     }
-// });
-
 app.get("/products", async (req, res) => {
     try {
         const category = req.query.category;
@@ -229,6 +199,31 @@ app.get("/products", async (req, res) => {
 });
 
 //-------------------------------------------------
+
+
+
+app.get('/allseller', async (req, res) => {
+    try {
+        const query = {
+            role: 'seller'
+        };
+        
+        const cursor = UsersCollection.find(query);
+        const result = await cursor.toArray();
+        res.send({
+            success: true,
+            message: "Successfully inserted data",
+            data: result,
+        });
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
 
 app.get('/myproduct', async (req, res) => {
     try {
@@ -273,7 +268,7 @@ app.post('/add-product', async (req, res) => {
 app.get('/myorders', async (req, res) => {
     try {
         const email = req.query.email;
-        const query = { email: email }
+        const query = { buyer_email: email }
         const cursor = BookedCollection.find(query);
 
         const myOrders = await cursor.toArray();
@@ -310,7 +305,10 @@ app.post('/booked', async (req, res) => {
         });
     }
 });
-app.put('/advertise/:id', async (req, res) => {
+
+
+// product update api---------------------------------------------
+app.put('/update-product/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const cursor = { _id: ObjectId(id) };
@@ -318,6 +316,30 @@ app.put('/advertise/:id', async (req, res) => {
         const updatedDoc = { $set: req.body }
 
         const result = await ProductsCollection.updateOne(cursor, updatedDoc, options);
+        res.send({
+            success: true,
+            message: "Successfully inserted data",
+        });
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+// seller update api for blue tick
+app.put('/update-seller/:id', async (req, res) => {
+    try {
+        const email = req.params.id;
+        const cursor = {email};
+        const options = { upsert: true };
+        const updatedDoc = { $set: req.body }
+
+        const user = await UsersCollection.updateOne(cursor, updatedDoc, options);
+        const product = await ProductsCollection.updateMany(cursor, updatedDoc, options);
         res.send({
             success: true,
             message: "Successfully inserted data",
