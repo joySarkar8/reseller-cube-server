@@ -225,6 +225,53 @@ app.get('/allseller', async (req, res) => {
     }
 });
 
+// all buyer get api
+app.get('/allbuyer', async (req, res) => {
+    try {
+        const query = {
+            role: 'buyer'
+        };
+        
+        const cursor = UsersCollection.find(query);
+        const result = await cursor.toArray();
+        res.send({
+            success: true,
+            message: "Successfully inserted data",
+            data: result,
+        });
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+
+// make seller api
+app.patch('/make-seller/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) }
+        const result = await UsersCollection.updateOne(query, { $set: req.body });
+        
+        res.send({
+            success: true,
+            message: "Successfully inserted data",
+            data: result,
+        });
+
+
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
 app.get('/myproduct', async (req, res) => {
     try {
         const email = req.query.email;
