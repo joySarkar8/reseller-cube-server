@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 require('dotenv').config();
@@ -11,8 +12,8 @@ app.use(express.json());
 app.use(cors());
 
 
-const uri = "mongodb://localhost:27017";
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.2lhfrsa.mongodb.net/?retryWrites=true&w=majority`;
+// const uri = "mongodb://localhost:27017";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.2lhfrsa.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 async function dbConnect() {
@@ -29,6 +30,7 @@ const CategoriesCollection = client.db("resellerCube").collection("categories");
 const UsersCollection = client.db("resellerCube").collection("users");
 const ProductsCollection = client.db("resellerCube").collection("products");
 const BookedCollection = client.db("resellerCube").collection("booked");
+const BlogCollection = client.db("resellerCube").collection("blogs");
 
 
 // categories get api
@@ -83,6 +85,30 @@ app.get("/advertise", async (req, res) => {
     }
 });
 
+// blog api
+app.get("/blog", async (req, res) => {
+    try {
+        const query = {};
+
+        const cursor = BlogCollection.find(query);
+        const blogs = await cursor.toArray();
+        
+        res.send({
+            success: true,
+            message: "Successfully load",
+            data: blogs,
+        });
+
+    } catch (error) {
+        // console.log(error.name, error.message);
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+
 // user post api
 app.post('/users', async (req, res) => {
     try {
@@ -125,7 +151,7 @@ app.get('/users/seller/:email', async (req, res) => {
                 message: "Unathorozed User",
             });
         }
-        else{
+        else {
             res.send({
                 success: false,
                 message: "Authorozed User",
@@ -156,7 +182,7 @@ app.get('/users/admin/:email', async (req, res) => {
                 message: "Unathorozed User",
             });
         }
-        else{
+        else {
             res.send({
                 success: false,
                 message: "Authorozed User",
@@ -177,7 +203,7 @@ app.get("/products", async (req, res) => {
         const category = req.query.category;
         const query = { category };
 
-        
+
         const cursor = ProductsCollection.find(query);
 
         const products = await cursor.toArray();
@@ -201,13 +227,51 @@ app.get("/products", async (req, res) => {
 //-------------------------------------------------
 
 
+app.delete('/buyer/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = await UsersCollection.deleteOne(query);
+
+
+        res.send({
+            success: true,
+            data: result,
+        });
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+})
+
+app.delete('/seller/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = await UsersCollection.deleteOne(query);
+
+
+        res.send({
+            success: true,
+            data: result,
+        });
+    } catch (error) {
+        res.send({
+            success: false,
+            error: error.message,
+        });
+    }
+})
+
 
 app.get('/allseller', async (req, res) => {
     try {
         const query = {
             role: 'seller'
         };
-        
+
         const cursor = UsersCollection.find(query);
         const result = await cursor.toArray();
         res.send({
@@ -231,7 +295,7 @@ app.get('/allbuyer', async (req, res) => {
         const query = {
             role: 'buyer'
         };
-        
+
         const cursor = UsersCollection.find(query);
         const result = await cursor.toArray();
         res.send({
@@ -256,7 +320,7 @@ app.patch('/make-seller/:id', async (req, res) => {
         const id = req.params.id;
         const query = { _id: ObjectId(id) }
         const result = await UsersCollection.updateOne(query, { $set: req.body });
-        
+
         res.send({
             success: true,
             message: "Successfully inserted data",
@@ -381,7 +445,7 @@ app.put('/update-product/:id', async (req, res) => {
 app.put('/update-seller/:id', async (req, res) => {
     try {
         const email = req.params.id;
-        const cursor = {email};
+        const cursor = { email };
         const options = { upsert: true };
         const updatedDoc = { $set: req.body }
 
